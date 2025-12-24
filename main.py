@@ -26,15 +26,15 @@ html, body, [class*="css"] {
 st.title("🌱 극지 식물의 온도별 성장률 대시보드")
 
 # ===============================
-# 기본 경로
+# 경로 설정
 # ===============================
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
 
-st.write("📁 데이터 폴더 경로:", DATA_DIR)
+st.write("📁 data 폴더 경로:", DATA_DIR)
 
 if not DATA_DIR.exists():
-    st.error("❌ data 폴더를 찾을 수 없습니다.")
+    st.error("❌ data 폴더가 존재하지 않습니다.")
     st.stop()
 
 # ===============================
@@ -48,7 +48,7 @@ SCHOOL_EC = {
 }
 
 # ===============================
-# 파일 찾기 (NFC/NFD 대응)
+# NFC / NFD 안전 파일 찾기
 # ===============================
 def find_file(directory: Path, target_name: str):
     target_nfc = unicodedata.normalize("NFC", target_name)
@@ -60,6 +60,7 @@ def find_file(directory: Path, target_name: str):
 
         if name_nfc == target_nfc or name_nfd == target_nfd:
             return file
+
     return None
 
 # ===============================
@@ -67,9 +68,9 @@ def find_file(directory: Path, target_name: str):
 # ===============================
 @st.cache_data
 def load_environment_data():
-    env = {}
+    env_data = {}
 
-    for school in SCHOOL_EC.keys():
+    for school in SCHOOL_EC:
         filename = f"{school}_환경데이터.csv"
         file = find_file(DATA_DIR, filename)
 
@@ -78,43 +79,8 @@ def load_environment_data():
             return None
 
         df = pd.read_csv(file)
-        env[school] = df
+        env_data[school] = df
 
-    return env
+    return env_data
 
-# ===============================
-# 생육 데이터 로딩 (xlsx)
-# ===============================
-@st.cache_data
-def load_growth_data():
-    xlsx_file = None
-
-    for file in DATA_DIR.iterdir():
-        if file.suffix == ".xlsx":
-            xlsx_file = file
-            break
-
-    if xlsx_file is None:
-        st.error("❌ 생육 결과 XLSX 파일을 찾을 수 없습니다.")
-        return None
-
-    sheets = pd.read_excel(xlsx_file, sheet_name=None)
-    return sheets
-
-# ===============================
-# 데이터 로딩 실행
-# ===============================
-with st.spinner("📊 데이터 로딩 중..."):
-    env_data = load_environment_data()
-    growth_data = load_growth_data()
-
-if env_data is None or growth_data is None:
-    st.stop()
-
-# ===============================
-# 데이터 로딩 확인 출력
-# ===============================
-st.success("✅ 데이터 로딩 완료")
-
-st.subheader("📌 환경 데이터 요약")
-for school, df in env_data.items():
+# ===============
